@@ -22,6 +22,22 @@ from PIL import Image
 from torch import nn
 device = "cuda" if torch.cuda.is_available() else "cpu"
 os.environ["TORCH_CUDNN_SDPA_ENABLED"] = "1"
+    
+def draw_line(p1, p2, ax, distance, obj_id=None):
+    cmap = plt.get_cmap("tab10")
+    cmap_idx = 0 if obj_id is None else obj_id
+    ax.plot([p1[0], p2[0]], [p1[1], p2[1]], color=cmap(cmap_idx), linewidth=2)
+    midpoint = [(p1[0] + p2[0]) / 2, (p1[1] + p2[1]) / 2]
+    ax.text(midpoint[0], midpoint[1], f'{distance}', color='white', fontsize=10)
+    
+
+def show_points(coords, labels, ax, marker_size=200):
+    
+    pos_points = coords[labels==1]
+    neg_points = coords[labels==0]
+    ax.scatter(pos_points[:, 0], pos_points[:, 1], color='green', marker='*', s=marker_size, edgecolor='white', linewidth=1.25)
+    ax.scatter(neg_points[:, 0], neg_points[:, 1], color='red', marker='*', s=marker_size, edgecolor='white', linewidth=1.25)
+
 
     
 def add_timestep_index(example, index):
@@ -48,6 +64,7 @@ def config():
     parser.add_argument('--pickle_file_path', type=str, default='segment_images.pkl')
     parser.add_argument('--batch-size', type=int, default=32)
     parser.add_argument('--checkpoint-path', type=str, default='/home/ubuntu/projects/akshay/Depth_Anything_V2/checkpoints')
+    parser.add_argument('--create-gifs', action='store_true')
     args = parser.parse_args()
     return args
 
@@ -86,6 +103,10 @@ if __name__ == '__main__':
     dataset = tfds.load('fractal20220817_tracking_data', data_dir=params.data_dir,
                         split=split)
     
+    if params.create_gifs:
+        os.makedirs('gif_images', exist_ok=True)
+        os.makedirs('gifs', exist_ok=True)
+    
     data_dict = {'idx': [idx for idx in range(len(dataset))],
                  'timestep_length': [len(item['steps']) for item in dataset]}
     data_idx = tf.data.Dataset.from_tensor_slices(data_dict)
@@ -112,6 +133,9 @@ if __name__ == '__main__':
         task = [d['observation']['natural_language_instruction'].numpy().decode('utf-8') for d in example['steps'].take(1)][0]
         example_idx = int(example['idx'].numpy())
         depth_map_list = []
+        task_object_positions = []
+        task_object_distances = []
+        task_end_effector_positions = []
         
         for b_idx, batch in tqdm(enumerate(example['steps'].batch(params.batch_size)), total=len(example['steps'])//params.batch_size):
             
@@ -171,17 +195,51 @@ if __name__ == '__main__':
                     new_object_loc_list.extend(object_loc_list[2*i:2*i+2] + [object_3d_locations[i]])
                     new_object_dist_list.extend(object_dist_list[2*i:2*i+2] + [object_3d_distances[i]])
                 
-                # print(f"New object locations: {new_object_loc_list}")
-                # print(f"New object distances: {new_object_dist_list}")
-                # print(f"New end effector location: {new_ee_loc}")
-                
                 img_name = f"{task}_{example_idx}_{ts}.png"
                 images_data[img_name] = {
                     'end effector image location': new_ee_loc,
                     'object locations': new_object_loc_list,
                     'object distances': new_object_dist_list
                 }
+                
+                # Add to task lists
+                task_object_positions.append(new_object_loc_list)
+                task_object_distances.append(new_object_dist_list)
+                task_end_effector_positions.append(new_ee_loc)
+                
                 img_idx += 1
+            
+        if params.create_gifs:
+            j = 0
+            images = [img['observation']['image'] for img in example['steps']]
+            for image, task_object_positions, task_object_distances, \
+                task_end_effector_positions in zip(images, task_object_positions, task_object_distances, task_end_effector_positions):
+                image = Image.fromarray(image.numpy())
+                
+                plt.close('all')
+                plt.imshow(image)
+                plt.axis('off')
+                
+                for obj_idx in range(4):
+                    obj_loc = task_object_positions[3*obj_idx:3*obj_idx+3]
+                    obj_loc = [round(obj_loc[0]*256), round(obj_loc[1]*256)]
+                    
+                    obj_distance = task_object_distances[3*obj_idx:3*obj_idx+3]
+                    obj_distance = [round(obj_distance[0], 2), round(obj_distance[1], 2), round(obj_distance[2], 2)]
+                    
+                    if obj_loc[0] != -2.0*256:
+                        draw_line(obj_loc, [round(task_end_effector_positions[0]*256), round(task_end_effector_positions[1]*256)],
+                                  plt.gca(), obj_distance, obj_idx)
+                
+                plt.savefig(f'gif_images/{task}_{example_idx}_{j}.png', bbox_inches='tight', pad_inches=0)
+                j += 1
+            
+            img_paths = [f"gif_imags/{img_name}" for img_name in os.listdir('gif_images')]
+            img_paths.sort()
+            output_video = f"gifs/{task}_{example_idx}_{shard}.gif"
+            input_pattern = f"gif_images/{task}_{example_idx}_%d.png"
+            os.system(f'ffmpeg -loglevel error -y -i \"{input_pattern}\"  \"{output_video}\"')
+            os.system(f'rm gif_images/*')
 
            
     print(f'Saving {img_idx} 3D-tracks to pickle file...')

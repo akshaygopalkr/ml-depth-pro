@@ -339,7 +339,7 @@ if __name__ == '__main__':
     with open(params.pickle_file_path, 'rb') as f:
         data = pickle.load(f)
     
-    # os.system(f'rm {params.pickle_file_path}')
+    os.system(f'rm {params.pickle_file_path}')
     
     record_dataset = tf.data.TFRecordDataset(
         os.path.join(

@@ -63,7 +63,7 @@ def config():
                         help='Shard of the dataset to save', choices=[i for i in range(1024)])
     parser.add_argument('--data-dir', type=str, default='/data/shresth/octo-data')
     parser.add_argument('--pickle_file_path', type=str, default='segment_images.pkl')
-    parser.add_argument('--batch-size', type=int, default=32)
+    parser.add_argument('--batch-size', type=int, default=24)
     parser.add_argument('--checkpoint-path', type=str, default='/home/ubuntu/projects/akshay/Depth_Anything_V2/checkpoints')
     parser.add_argument('--create-gifs', action='store_true')
     args = parser.parse_args()

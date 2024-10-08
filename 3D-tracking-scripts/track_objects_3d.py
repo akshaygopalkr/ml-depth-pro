@@ -22,6 +22,7 @@ from PIL import Image
 from torch import nn
 device = "cuda" if torch.cuda.is_available() else "cpu"
 os.environ["TORCH_CUDNN_SDPA_ENABLED"] = "1"
+print("cuDNN version:", torch.backends.cudnn.version())
     
 def draw_line(p1, p2, ax, distance, obj_id=None):
     cmap = plt.get_cmap("tab10")

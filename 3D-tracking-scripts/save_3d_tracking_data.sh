@@ -10,5 +10,5 @@ echo "Job index: $job_index, start: $start, end: $end"
 for (( j=start; j<=end; j++ ))
 do
    python 3D-tracking-scripts/track_objects_3d.py --data-shard $j --data-dir /ariesdv0/zhanling/oxe-data-converted
-   python 3D-tracking-scripts/save_3d_object_tracks.py --data-shard $j --data-dir /ariesdv0/zhanling/oxe-data-converted --tracking-data-dir /ariesdv0/zhanling/oxe-data-converted/fractal20220817_3D_tracking_data/0.1.0
+   python 3D-tracking-scripts/save_3d_object_tracks.py --data-shard $j --data-dir /ariesdv0/zhanling/oxe-data-converted --tracking-3D-data-dir /ariesdv0/zhanling/oxe-data-converted/fractal20220817_3D_tracking_data/0.1.0
 done

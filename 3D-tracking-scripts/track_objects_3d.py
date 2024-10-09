@@ -22,7 +22,6 @@ from PIL import Image
 from torch import nn
 device = "cuda" if torch.cuda.is_available() else "cpu"
 os.environ["TORCH_CUDNN_SDPA_ENABLED"] = "1"
-print("cuDNN version:", torch.backends.cudnn.version())
     
 def draw_line(p1, p2, ax, distance, obj_id=None):
     cmap = plt.get_cmap("tab10")
@@ -170,7 +169,7 @@ if __name__ == '__main__':
             for depth, ts, ee_loc, object_loc_list, object_dist_list in zip(depth_map_list, ts_list, end_effector_locs, object_locations, object_distances):
                 
                 # Get the integer coordinates of the end effector location
-                img_ee_loc = [round(ee_loc[0]*256), round(ee_loc[1]*256)]
+                img_ee_loc = [min(255, round(ee_loc[0]*256)), min(round(ee_loc[1]*256), 255)]
                 
                 # Get depth at end effector location
                 normalized_ee_point = depth[img_ee_loc[1], img_ee_loc[0]]
@@ -182,7 +181,8 @@ if __name__ == '__main__':
                     object_loc = object_loc_list[2*i:2*i+2]
                     
                     if object_loc != [-2.0, -2.0]:
-                        object_loc = [round(object_loc[0]*256), round(object_loc[1]*256)]
+                        object_loc = [min(round(object_loc[0]*256), 255),
+                                      min(round(object_loc[1]*256, 255))]
                         object_3d_locations.append(depth[object_loc[1], object_loc[0]])
                         object_3d_distances.append(normalized_ee_point - depth[object_loc[1], object_loc[0]])
                     else:

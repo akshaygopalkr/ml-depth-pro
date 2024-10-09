@@ -182,7 +182,7 @@ if __name__ == '__main__':
                     
                     if object_loc != [-2.0, -2.0]:
                         object_loc = [min(round(object_loc[0]*256), 255),
-                                      min(round(object_loc[1]*256, 255))]
+                                      min(round(object_loc[1]*256), 255)]
                         object_3d_locations.append(depth[object_loc[1], object_loc[0]])
                         object_3d_distances.append(normalized_ee_point - depth[object_loc[1], object_loc[0]])
                     else:

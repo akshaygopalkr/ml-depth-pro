@@ -170,7 +170,7 @@ def write_tfrecord(dataset):
     
     tfrecord_file = os.path.join(
         params.tracking_3D_data_dir,
-        f'fractal20220817_3D_tracking_data-train.tfrecord-{shard_str}-of-01024'
+        f'fractal20220817_depth_tracking_data-train.tfrecord-{shard_str}-of-01024'
     )
     
     with tf.io.TFRecordWriter(tfrecord_file) as writer:
@@ -273,7 +273,7 @@ def save_dataset_info():
     with open(dset_info_path, 'r') as f:
         dset_info = json.load(f)
     
-    dset_info['name'] = 'fractal20220817_3D_tracking_data'
+    dset_info['name'] = 'fractal20220817_depth_tracking_data'
     
     features['featuresDict']['features']['steps']\
                 ['sequence']['feature']['featuresDict']\
@@ -317,7 +317,7 @@ def params():
     parser.add_argument('--data-shard', type=int, default=0,
                         help='Shard of the dataset to save', choices=[i for i in range(1025)])
     parser.add_argument('--data-dir', type=str, default='/data/shresth/octo-data')
-    parser.add_argument('--tracking-3D-data-dir', type=str, default='/data/shresth/octo-data/fractal20220817_3D_tracking_data/0.1.0')
+    parser.add_argument('--tracking-3D-data-dir', type=str, default='/data/shresth/octo-data/fractal20220817_depth_tracking_data/0.1.0')
     parser.add_argument('--pickle_file_path', type=str, default='segment_images.pkl')
     args = parser.parse_args()
     return args
@@ -364,5 +364,5 @@ if __name__ == '__main__':
     feature_dict = get_record_features()
     print(f'Serializing and writing dataset to tfrecord...')
     write_tfrecord(dataset)
-    print(f'Updating feature and info dictionary...')
-    save_dataset_info()
+    # print(f'Updating feature and info dictionary...')
+    # save_dataset_info()

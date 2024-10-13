@@ -170,6 +170,7 @@ if __name__ == '__main__':
                 
                 # Get the integer coordinates of the end effector location
                 img_ee_loc = [min(255, round(ee_loc[0]*256)), min(round(ee_loc[1]*256), 255)]
+                img_ee_loc = [max(0, img_ee_loc[0]), max(0, img_ee_loc[1])]
                 
                 # Get depth at end effector location
                 normalized_ee_point = depth[img_ee_loc[1], img_ee_loc[0]]
@@ -183,6 +184,7 @@ if __name__ == '__main__':
                     if object_loc != [-2.0, -2.0]:
                         object_loc = [min(round(object_loc[0]*256), 255),
                                       min(round(object_loc[1]*256), 255)]
+                        object_loc = [max(0, object_loc[0]), max(0, object_loc[1])]
                         object_3d_locations.append(depth[object_loc[1], object_loc[0]])
                         object_3d_distances.append(normalized_ee_point - depth[object_loc[1], object_loc[0]])
                     else:
